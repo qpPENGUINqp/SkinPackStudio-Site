@@ -12,14 +12,7 @@ import './styles/layout.css';
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
+  min-height: 100dvh;
 `;
 
 const Header = styled.header`
@@ -65,7 +58,6 @@ const Main = styled.main`
   overflow: hidden;
 
   @media (max-width: 768px) {
-    flex: none;
     grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem 0.75rem;
@@ -82,6 +74,7 @@ const Main = styled.main`
 
 const Footer = styled.footer<{ $isMobile: boolean }>`
   flex-shrink: 0;
+  margin-top: auto;
   display: flex;
   justify-content: center;
   align-items: center;
