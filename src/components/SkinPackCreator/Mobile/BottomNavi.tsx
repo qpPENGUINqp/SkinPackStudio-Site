@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Button } from '@freee_jp/vibes';
+import { Button, DropdownButton } from '@freee_jp/vibes';
 
 const NaviContainer = styled.nav`
   position: fixed;
@@ -20,22 +20,37 @@ const NavButton = styled.div`
 `;
 
 type BottomNaviProps = {
-  onAddSkinClick: () => void;
+  onAddSkinFromImage: () => void;
+  onAddSkinFromPack: () => void;
   onDownloadClick: () => void;
   isDownloadDisabled: boolean;
 };
 
 export const BottomNavi = ({
-  onAddSkinClick,
+  onAddSkinFromImage,
+  onAddSkinFromPack,
   onDownloadClick,
   isDownloadDisabled,
 }: BottomNaviProps) => {
   return (
     <NaviContainer>
       <NavButton>
-        <Button onClick={onAddSkinClick} appearance="secondary" width="full">
-          スキンを追加
-        </Button>
+        <DropdownButton
+          buttonLabel="スキン追加"
+          appearance="secondary"
+          dropdownContents={[
+            {
+              type: 'selectable',
+              text: '画像から追加',
+              onClick: onAddSkinFromImage,
+            },
+            {
+              type: 'selectable',
+              text: 'パックから追加',
+              onClick: onAddSkinFromPack,
+            },
+          ]}
+        />
       </NavButton>
       <NavButton>
         <Button

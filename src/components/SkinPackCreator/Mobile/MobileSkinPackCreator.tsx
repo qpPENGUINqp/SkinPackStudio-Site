@@ -3,8 +3,9 @@ import styled from 'styled-components';
 import { SectionTitle, CardBase, MarginBase, TextField, Message } from '@freee_jp/vibes';
 import { SkinList } from '../SkinList';
 import { BottomNavi } from './BottomNavi';
-import { SkinPack, SkinModel } from '../../../types/skin';
+import { SkinPack, Skin, SkinModel } from '../../../types/skin';
 import { exportSkinPack } from '../../../utils/exportPack';
+import { extractSkinsFromPack, selectMcpackFile } from '../../../utils/importPack';
 import { validateSkinImage, fileToDataURL } from '../../../utils/skinValidator';
 import { detectModelFromDataURL } from '../../../utils/skinModelDetector';
 
@@ -18,6 +19,7 @@ const Container = styled.div`
 type MobileSkinPackCreatorProps = {
   skinPack: SkinPack;
   addSkin: (name: string, texture: string, model: SkinModel) => void;
+  addSkins: (skins: Skin[]) => void;
   removeSkin: (id: string) => void;
   updateSkinName: (id: string, name: string) => void;
   updateSkinModel: (id: string, model: SkinModel) => void;
@@ -28,6 +30,7 @@ type MobileSkinPackCreatorProps = {
 export const MobileSkinPackCreator = ({
   skinPack,
   addSkin,
+  addSkins,
   removeSkin,
   updateSkinName,
   updateSkinModel,
@@ -44,6 +47,20 @@ export const MobileSkinPackCreator = ({
     }
     await exportSkinPack(skinPack);
   }, [skinPack]);
+
+  const handleAddSkinFromPack = useCallback(async () => {
+    const file = await selectMcpackFile();
+    if (!file) return;
+
+    try {
+      const skins = await extractSkinsFromPack(file);
+      addSkins(skins);
+      setError(null);
+    } catch (err) {
+      console.error('パックからの追加エラー:', err);
+      setError('パックからの追加に失敗しました。有効なmcpackファイルを選択してください。');
+    }
+  }, [addSkins]);
 
   const handleFiles = useCallback(
     async (files: FileList) => {
@@ -128,7 +145,8 @@ export const MobileSkinPackCreator = ({
 
       {/* 下部固定ナビゲーション */}
       <BottomNavi
-        onAddSkinClick={handleAddSkinClick}
+        onAddSkinFromImage={handleAddSkinClick}
+        onAddSkinFromPack={handleAddSkinFromPack}
         onDownloadClick={handleExport}
         isDownloadDisabled={skinPack.skins.length === 0}
       />
