@@ -42,6 +42,13 @@ export const useSkinPack = () => {
     }));
   }, []);
 
+  const updateSkinTexture = useCallback((id: string, texture: string) => {
+    setSkinPack((prev) => ({
+      ...prev,
+      skins: prev.skins.map((skin) => (skin.id === id ? { ...skin, texture } : skin)),
+    }));
+  }, []);
+
   const updatePackName = useCallback((name: string) => {
     setSkinPack((prev) => ({
       ...prev,
@@ -76,6 +83,7 @@ export const useSkinPack = () => {
     removeSkin,
     updateSkinName,
     updateSkinModel,
+    updateSkinTexture,
     updatePackName,
     reorderSkins,
     replaceSkinPack,

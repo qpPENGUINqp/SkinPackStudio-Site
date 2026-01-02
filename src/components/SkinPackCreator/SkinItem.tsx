@@ -108,6 +108,7 @@ type SkinItemProps = {
   onMoveDown?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+  onEdit?: () => void;
 };
 
 export const SkinItem = ({
@@ -125,6 +126,7 @@ export const SkinItem = ({
   onMoveDown,
   isFirst = false,
   isLast = false,
+  onEdit,
 }: SkinItemProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -149,6 +151,11 @@ export const SkinItem = ({
   const handleMoveDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMoveDown?.();
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.();
   };
 
   return (
@@ -201,9 +208,16 @@ export const SkinItem = ({
               ワイド
             </SegmentControlButton>
           </ModelButtons>
-          <DeleteButton onClick={handleDelete} appearance="tertiary" danger small>
-            削除
-          </DeleteButton>
+          <ModelButtons>
+            {onEdit && (
+              <Button onClick={handleEdit} appearance="tertiary" small>
+                編集
+              </Button>
+            )}
+            <DeleteButton onClick={handleDelete} appearance="tertiary" danger small>
+              削除
+            </DeleteButton>
+          </ModelButtons>
         </ActionsRow>
       </InfoContainer>
     </Container>

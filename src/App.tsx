@@ -12,7 +12,8 @@ import './styles/layout.css';
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
 `;
 
 const Header = styled.header`
@@ -47,21 +48,19 @@ const HeaderActions = styled.div`
 
 const Main = styled.main`
   flex: 1;
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
   padding: 1rem 1.5rem;
-  overflow: hidden;
+  min-height: 0;
+  overflow: auto;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem 0.75rem;
-    overflow: visible;
   }
 
   & > * {
@@ -74,12 +73,11 @@ const Main = styled.main`
 
 const Footer = styled.footer<{ $isMobile: boolean }>`
   flex-shrink: 0;
-  margin-top: auto;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   color: #666;
   font-size: 0.875rem;
   border-top: 1px solid #e0e0e0;
@@ -88,7 +86,6 @@ const Footer = styled.footer<{ $isMobile: boolean }>`
   ${({ $isMobile }) =>
     $isMobile &&
     `
-    padding: 0.75rem 1rem;
     margin-bottom: 60px;
   `}
 `;

@@ -22,6 +22,7 @@ type SkinListProps = {
   onSkinNameChange: (id: string, name: string) => void;
   onSkinModelChange: (id: string, model: SkinModel) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onSkinEdit?: (skin: Skin) => void;
 };
 
 export const SkinList = ({
@@ -32,6 +33,7 @@ export const SkinList = ({
   onSkinNameChange,
   onSkinModelChange,
   onReorder,
+  onSkinEdit,
 }: SkinListProps) => {
   const isMobile = useIsMobile();
 
@@ -94,6 +96,7 @@ export const SkinList = ({
           onMoveDown={() => handleMoveDown(index)}
           isFirst={index === 0}
           isLast={index === skins.length - 1}
+          onEdit={onSkinEdit ? () => onSkinEdit(skin) : undefined}
         />
       ))}
     </div>
