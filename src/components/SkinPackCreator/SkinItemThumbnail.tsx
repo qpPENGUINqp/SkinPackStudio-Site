@@ -1,6 +1,3 @@
-import { Suspense, useMemo, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import * as THREE from 'three';
 import { VibesBackgroundColor } from '@freee_jp/vibes';
 
 type SkinItemThumbnailProps = {
@@ -9,153 +6,95 @@ type SkinItemThumbnailProps = {
   isSlim: boolean;
 };
 
-type BodyPartProps = {
-  position: [number, number, number];
-  size: [number, number, number];
-  uvOffset: [number, number];
-  texture: THREE.Texture;
-  scale?: number;
-  textureScale?: number;
+// スキンパーツの定義（64x64テクスチャ基準）
+type SkinPartDef = {
+  // テクスチャ上の位置とサイズ
+  srcX: number;
+  srcY: number;
+  srcW: number;
+  srcH: number;
+  // 表示位置（16x32基準）
+  dstX: number;
+  dstY: number;
 };
 
-type ThumbnailCharacterProps = {
-  texture: string;
-  isSlim: boolean;
-};
-
-const createBoxUVs = (
-  u: number,
-  v: number,
-  w: number,
-  h: number,
-  d: number,
-  textureWidth: number,
-  textureHeight: number
-) => {
-  const tw = textureWidth;
-  const th = textureHeight;
-  const uvs: number[] = [];
-
-  // Right face (x+)
-  uvs.push(
-    (u + d + w) / tw, 1 - (v + d) / th,
-    (u + d) / tw, 1 - (v + d) / th,
-    (u + d + w) / tw, 1 - (v + d + h) / th,
-    (u + d) / tw, 1 - (v + d + h) / th
-  );
-
-  // Left face (x-)
-  uvs.push(
-    u / tw, 1 - (v + d) / th,
-    (u + d) / tw, 1 - (v + d) / th,
-    u / tw, 1 - (v + d + h) / th,
-    (u + d) / tw, 1 - (v + d + h) / th
-  );
-
-  // Top face (y+)
-  uvs.push(
-    (u + d) / tw, 1 - v / th,
-    (u + d + w) / tw, 1 - v / th,
-    (u + d) / tw, 1 - (v + d) / th,
-    (u + d + w) / tw, 1 - (v + d) / th
-  );
-
-  // Bottom face (y-)
-  uvs.push(
-    (u + d + w) / tw, 1 - v / th,
-    (u + d + w + w) / tw, 1 - v / th,
-    (u + d + w) / tw, 1 - (v + d) / th,
-    (u + d + w + w) / tw, 1 - (v + d) / th
-  );
-
-  // Front face (z+)
-  uvs.push(
-    (u + d) / tw, 1 - (v + d) / th,
-    (u + d + w) / tw, 1 - (v + d) / th,
-    (u + d) / tw, 1 - (v + d + h) / th,
-    (u + d + w) / tw, 1 - (v + d + h) / th
-  );
-
-  // Back face (z-)
-  uvs.push(
-    (u + d + w + d) / tw, 1 - (v + d) / th,
-    (u + d + w + d + w) / tw, 1 - (v + d) / th,
-    (u + d + w + d) / tw, 1 - (v + d + h) / th,
-    (u + d + w + d + w) / tw, 1 - (v + d + h) / th
-  );
-
-  return new Float32Array(uvs);
-};
-
-const BodyPart = ({
-  position,
-  size,
-  uvOffset,
-  texture,
-  scale = 1,
-  textureScale = 1,
-}: BodyPartProps) => {
-  const [w, h, d] = size;
-  const [u, v] = uvOffset;
-  const textureWidth = 64;
-  const textureHeight = 64;
-
-  const geometry = useMemo(() => {
-    const geo = new THREE.BoxGeometry((w / 8) * scale, (h / 8) * scale, (d / 8) * scale);
-    const scaledU = u * textureScale;
-    const scaledV = v * textureScale;
-    const scaledW = w * textureScale;
-    const scaledH = h * textureScale;
-    const scaledD = d * textureScale;
-    const scaledTW = textureWidth * textureScale;
-    const scaledTH = textureHeight * textureScale;
-    const uvs = createBoxUVs(scaledU, scaledV, scaledW, scaledH, scaledD, scaledTW, scaledTH);
-    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-    return geo;
-  }, [w, h, d, u, v, scale, textureScale]);
-
-  return (
-    <mesh position={position} geometry={geometry}>
-      <meshBasicMaterial map={texture} side={THREE.FrontSide} alphaTest={0.1} transparent />
-    </mesh>
-  );
-};
-
-const ThumbnailCharacter = ({ texture, isSlim }: ThumbnailCharacterProps) => {
-  const [textureScale, setTextureScale] = useState(1);
-
-  const skinTexture = useMemo(() => {
-    const tex = new THREE.TextureLoader().load(texture, (loadedTex) => {
-      const img = loadedTex.image;
-      if (img && 'width' in img) {
-        const width = (img as { width: number }).width;
-        setTextureScale(width / 64);
-      }
-    });
-    tex.magFilter = THREE.NearestFilter;
-    tex.minFilter = THREE.NearestFilter;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, [texture]);
-
+const getSkinParts = (isSlim: boolean): SkinPartDef[] => {
   const armWidth = isSlim ? 3 : 4;
-  const overlayScale = 1.1;
+  const slimArmOffset = isSlim ? 1 : 0;
+
+  return [
+    // ベースレイヤー
+    // 左腕 (front at 44, 20)
+    { srcX: 44, srcY: 20, srcW: armWidth, srcH: 12, dstX: slimArmOffset, dstY: 8 },
+    // 右腕 (front at 36, 52)
+    { srcX: 36, srcY: 52, srcW: armWidth, srcH: 12, dstX: 12, dstY: 8 },
+    // 左脚 (front at 4, 20)
+    { srcX: 4, srcY: 20, srcW: 4, srcH: 12, dstX: 4, dstY: 20 },
+    // 右脚 (front at 20, 52)
+    { srcX: 20, srcY: 52, srcW: 4, srcH: 12, dstX: 8, dstY: 20 },
+    // 胴体 (front at 20, 20)
+    { srcX: 20, srcY: 20, srcW: 8, srcH: 12, dstX: 4, dstY: 8 },
+    // 頭 (front at 8, 8)
+    { srcX: 8, srcY: 8, srcW: 8, srcH: 8, dstX: 4, dstY: 0 },
+
+    // オーバーレイレイヤー
+    // 左腕オーバーレイ (front at 44, 36)
+    { srcX: 44, srcY: 36, srcW: armWidth, srcH: 12, dstX: slimArmOffset, dstY: 8 },
+    // 右腕オーバーレイ (front at 52, 52)
+    { srcX: 52, srcY: 52, srcW: armWidth, srcH: 12, dstX: 12, dstY: 8 },
+    // 左脚オーバーレイ (front at 4, 36)
+    { srcX: 4, srcY: 36, srcW: 4, srcH: 12, dstX: 4, dstY: 20 },
+    // 右脚オーバーレイ (front at 4, 52)
+    { srcX: 4, srcY: 52, srcW: 4, srcH: 12, dstX: 8, dstY: 20 },
+    // 胴体オーバーレイ (front at 20, 36)
+    { srcX: 20, srcY: 36, srcW: 8, srcH: 12, dstX: 4, dstY: 8 },
+    // 頭オーバーレイ (front at 40, 8)
+    { srcX: 40, srcY: 8, srcW: 8, srcH: 8, dstX: 4, dstY: 0 },
+  ];
+};
+
+// CSSベースでテクスチャパーツを切り出して表示するコンポーネント
+const SkinPart = ({
+  texture,
+  part,
+  scale,
+  offsetX,
+}: {
+  texture: string;
+  part: SkinPartDef;
+  scale: number;
+  offsetX: number;
+}) => {
+  // 表示サイズ
+  const displayW = part.srcW * scale;
+  const displayH = part.srcH * scale;
+
+  // 表示位置
+  const left = offsetX + part.dstX * scale;
+  const top = part.dstY * scale;
+
+  // background-size: テクスチャ全体を表示スケールに合わせる
+  const bgSize = 64 * scale;
+
+  // background-position: 切り出し位置（負の値）
+  const bgPosX = -part.srcX * scale;
+  const bgPosY = -part.srcY * scale;
 
   return (
-    <group position={[0, 0, 0]} rotation={[0, Math.PI / 8, 0]}>
-      <BodyPart position={[0, 1.5, 0]} size={[8, 8, 8]} uvOffset={[0, 0]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[0, 1.5, 0]} size={[8, 8, 8]} uvOffset={[32, 0]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-      <BodyPart position={[0, 0.25, 0]} size={[8, 12, 4]} uvOffset={[16, 16]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[0, 0.25, 0]} size={[8, 12, 4]} uvOffset={[16, 32]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-      <BodyPart position={[isSlim ? -0.6875 : -0.75, 0.25, 0]} size={[armWidth, 12, 4]} uvOffset={[40, 16]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[isSlim ? -0.6875 : -0.75, 0.25, 0]} size={[armWidth, 12, 4]} uvOffset={[40, 32]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-      <BodyPart position={[isSlim ? 0.6875 : 0.75, 0.25, 0]} size={[armWidth, 12, 4]} uvOffset={[32, 48]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[isSlim ? 0.6875 : 0.75, 0.25, 0]} size={[armWidth, 12, 4]} uvOffset={[48, 48]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-      <BodyPart position={[-0.25, -1.25, 0]} size={[4, 12, 4]} uvOffset={[0, 16]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[-0.25, -1.25, 0]} size={[4, 12, 4]} uvOffset={[0, 32]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-      <BodyPart position={[0.25, -1.25, 0]} size={[4, 12, 4]} uvOffset={[16, 48]} texture={skinTexture} textureScale={textureScale} />
-      <BodyPart position={[0.25, -1.25, 0]} size={[4, 12, 4]} uvOffset={[0, 48]} texture={skinTexture} scale={overlayScale} textureScale={textureScale} />
-    </group>
+    <div
+      style={{
+        position: 'absolute',
+        left,
+        top,
+        width: displayW,
+        height: displayH,
+        backgroundImage: `url(${texture})`,
+        backgroundSize: `${bgSize}px ${bgSize}px`,
+        backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }}
+    />
   );
 };
 
@@ -167,21 +106,26 @@ export const SkinItemThumbnail = ({ texture, size = 48, isSlim }: SkinItemThumbn
     overflow: 'hidden',
     background: VibesBackgroundColor,
     flexShrink: 0,
+    position: 'relative',
   };
+
+  // 16x32 のスキンを size に収める
+  const scale = size / 32;
+  const offsetX = (size - 16 * scale) / 2;
+
+  const parts = getSkinParts(isSlim);
 
   return (
     <div style={containerStyle}>
-      <Canvas
-        camera={{ position: [4, 1.5, 12], fov: 20 }}
-        gl={{ antialias: false, alpha: true }}
-        style={{ width: '100%', height: '100%' }}
-      >
-        <ambientLight intensity={1} />
-        <directionalLight position={[2, 2, 2]} intensity={0.5} />
-        <Suspense fallback={null}>
-          <ThumbnailCharacter texture={texture} isSlim={isSlim} />
-        </Suspense>
-      </Canvas>
+      {parts.map((part, index) => (
+        <SkinPart
+          key={index}
+          texture={texture}
+          part={part}
+          scale={scale}
+          offsetX={offsetX}
+        />
+      ))}
     </div>
   );
 };
