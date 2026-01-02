@@ -58,13 +58,26 @@ export const useSkinPack = () => {
     });
   }, []);
 
+  const replaceSkinPack = useCallback((newPack: SkinPack) => {
+    setSkinPack(newPack);
+  }, []);
+
+  const addSkins = useCallback((skins: Skin[]) => {
+    setSkinPack((prev) => ({
+      ...prev,
+      skins: [...prev.skins, ...skins],
+    }));
+  }, []);
+
   return {
     skinPack,
     addSkin,
+    addSkins,
     removeSkin,
     updateSkinName,
     updateSkinModel,
     updatePackName,
     reorderSkins,
+    replaceSkinPack,
   };
 };
